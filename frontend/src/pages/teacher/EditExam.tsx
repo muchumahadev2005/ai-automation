@@ -52,8 +52,7 @@ const EditExam: React.FC = () => {
           branch: exam.branch ?? "",
           semester: String(exam.year ?? ""),
           duration: exam.duration_minutes ?? exam.durationMinutes ?? 60,
-          totalQuestions:
-            exam.total_questions ?? exam.totalQuestions ?? 10,
+          totalQuestions: exam.total_questions ?? exam.totalQuestions ?? 10,
           difficulty: "MEDIUM",
           status: exam.status ?? "DRAFT",
         });

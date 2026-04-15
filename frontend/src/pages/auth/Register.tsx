@@ -24,7 +24,15 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
 
   const validate = (): boolean => {
-    if (!name || !email || !password || !confirmPassword || !registerNumber || !branch || !year) {
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !registerNumber ||
+      !branch ||
+      !year
+    ) {
       setError("All fields are required");
       return false;
     }
@@ -73,7 +81,7 @@ const Register: React.FC = () => {
         password,
         register_number: registerNumber,
         branch,
-         year: Number(year),
+        year: Number(year),
         role: "STUDENT",
       });
 

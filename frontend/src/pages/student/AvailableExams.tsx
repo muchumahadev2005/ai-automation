@@ -49,12 +49,8 @@ const AvailableExams: React.FC = () => {
     const matchesFilter =
       filter === "all" || (exam.status as string | undefined) === filter;
     const matchesSearch =
-      (exam.title || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      (exam.subject || "")
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+      (exam.title || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (exam.subject || "").toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 

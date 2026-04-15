@@ -59,19 +59,19 @@ const Result: React.FC = () => {
   }
 
   return !result ? (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-sm border w-full max-w-md p-6 text-center space-y-4">
-          <h1 className="text-lg font-semibold text-gray-900">No result data</h1>
-          <p className="text-sm text-gray-500">
-            Your exam result could not be found. Please go back to the
-            dashboard and open the result again.
-          </p>
-          <Button onClick={() => navigate("/student/dashboard")}>
-            Back to Dashboard
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-sm border w-full max-w-md p-6 text-center space-y-4">
+        <h1 className="text-lg font-semibold text-gray-900">No result data</h1>
+        <p className="text-sm text-gray-500">
+          Your exam result could not be found. Please go back to the dashboard
+          and open the result again.
+        </p>
+        <Button onClick={() => navigate("/student/dashboard")}>
+          Back to Dashboard
+        </Button>
       </div>
-    ) : (
+    </div>
+  ) : (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-sm border w-full max-w-xl">
         <div className="px-6 py-4 border-b flex items-center justify-between">
@@ -103,9 +103,7 @@ const Result: React.FC = () => {
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <div className="bg-gray-50 rounded-md px-3 py-2">
               <dt className="text-xs text-gray-500">Correct</dt>
-              <dd className="mt-1 font-medium text-gray-900">
-                {result.score}
-              </dd>
+              <dd className="mt-1 font-medium text-gray-900">{result.score}</dd>
             </div>
             <div className="bg-gray-50 rounded-md px-3 py-2">
               <dt className="text-xs text-gray-500">Wrong</dt>
@@ -115,9 +113,7 @@ const Result: React.FC = () => {
             </div>
             <div className="bg-gray-50 rounded-md px-3 py-2">
               <dt className="text-xs text-gray-500">Total Questions</dt>
-              <dd className="mt-1 font-medium text-gray-900">
-                {result.total}
-              </dd>
+              <dd className="mt-1 font-medium text-gray-900">{result.total}</dd>
             </div>
             <div className="bg-gray-50 rounded-md px-3 py-2">
               <dt className="text-xs text-gray-500">Time Taken</dt>

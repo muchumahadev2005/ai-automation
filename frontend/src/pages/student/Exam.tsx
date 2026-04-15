@@ -128,8 +128,7 @@ const Exam: React.FC = () => {
     } catch (error) {
       console.error("Failed to submit exam:", error);
       const message =
-        (error as any)?.message ||
-        "Failed to submit exam. Please try again.";
+        (error as any)?.message || "Failed to submit exam. Please try again.";
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);

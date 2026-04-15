@@ -104,10 +104,14 @@ const CreateExam: React.FC = () => {
     }
 
     if (!examTitle.trim()) {
-      throw new Error("Please enter an exam title before generating questions.");
+      throw new Error(
+        "Please enter an exam title before generating questions.",
+      );
     }
     if (!branch || !year) {
-      throw new Error("Please select branch and year before generating questions.");
+      throw new Error(
+        "Please select branch and year before generating questions.",
+      );
     }
 
     const createResponse = await examService.createExam({
@@ -193,7 +197,9 @@ const CreateExam: React.FC = () => {
     setQuestions(mappedQuestions);
 
     const requested = Number(generated?.requested ?? questionCount);
-    const generatedCount = Number(generated?.generated ?? mappedQuestions.length);
+    const generatedCount = Number(
+      generated?.generated ?? mappedQuestions.length,
+    );
 
     if (
       Number.isFinite(requested) &&
@@ -206,7 +212,9 @@ const CreateExam: React.FC = () => {
       return;
     }
 
-    setSuccessMessage(`Generated ${mappedQuestions.length} questions successfully.`);
+    setSuccessMessage(
+      `Generated ${mappedQuestions.length} questions successfully.`,
+    );
   };
 
   const handleGenerateFromSyllabus = async () => {
@@ -481,9 +489,7 @@ const CreateExam: React.FC = () => {
                 <select
                   value={difficulty}
                   onChange={(e) =>
-                    setDifficulty(
-                      e.target.value as "easy" | "medium" | "hard",
-                    )
+                    setDifficulty(e.target.value as "easy" | "medium" | "hard")
                   }
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"
                 >
@@ -584,7 +590,9 @@ const CreateExam: React.FC = () => {
               <button
                 type="button"
                 onClick={handlePublish}
-                disabled={!canPublish || examStatus === "PUBLISHED" || isPublishing}
+                disabled={
+                  !canPublish || examStatus === "PUBLISHED" || isPublishing
+                }
                 className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {examStatus === "PUBLISHED"

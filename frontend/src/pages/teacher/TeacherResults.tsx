@@ -141,10 +141,9 @@ const TeacherResults: React.FC = () => {
         </h1>
         {statistics && (
           <p className="text-gray-500 text-sm sm:text-base">
-            Completed attempts: {statistics.completedAttempts} /{
-              statistics.totalAttempts
-            }
-            , average score {statistics.averageScore.toFixed(2)}, pass rate {" "}
+            Completed attempts: {statistics.completedAttempts} /
+            {statistics.totalAttempts}, average score{" "}
+            {statistics.averageScore.toFixed(2)}, pass rate{" "}
             {statistics.passRate}%
           </p>
         )}
@@ -176,9 +175,7 @@ const TeacherResults: React.FC = () => {
                     <p className="text-sm font-medium text-gray-900">
                       {row.studentName}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      {row.studentEmail}
-                    </p>
+                    <p className="text-xs text-gray-500">{row.studentEmail}</p>
                   </td>
                   <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-700">
                     {row.registerNumber}

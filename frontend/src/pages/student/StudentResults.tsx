@@ -48,7 +48,9 @@ const StudentResults: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-sm border w-full max-w-md p-6 text-center space-y-4">
-          <h1 className="text-lg font-semibold text-gray-900">No results yet</h1>
+          <h1 className="text-lg font-semibold text-gray-900">
+            No results yet
+          </h1>
           <p className="text-sm text-gray-500">
             You haven't submitted any exams yet. Once you complete an exam, your
             results will appear here.
@@ -105,7 +107,8 @@ const StudentResults: React.FC = () => {
                       {result.branch} / {result.year} year
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4 text-sm text-gray-800">
-                      {result.score}/{result.totalMarks} ({result.percentage.toFixed(2)}%)
+                      {result.score}/{result.totalMarks} (
+                      {result.percentage.toFixed(2)}%)
                     </td>
                     <td className="px-4 sm:px-6 py-3 sm:py-4">
                       <span
