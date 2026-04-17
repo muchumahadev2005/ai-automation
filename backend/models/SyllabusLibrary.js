@@ -161,6 +161,7 @@ const SyllabusLibrary = {
       'mime_type',
       'file_size_bytes',
       'status',
+      'extracted_text',
     ];
 
     const fieldMap = {

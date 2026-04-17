@@ -143,6 +143,7 @@ CREATE TABLE syllabus_library (
     mime_type VARCHAR(120) NOT NULL,
     file_size_bytes BIGINT NOT NULL CHECK (file_size_bytes > 0),
     status syllabus_upload_status NOT NULL DEFAULT 'UPLOADED',
+    extracted_text TEXT,
     uploaded_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

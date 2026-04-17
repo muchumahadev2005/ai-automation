@@ -22,6 +22,7 @@ const ApiError = require('../utils/ApiError');
 const logger = require('../utils/logger');
 const { deleteFile } = require('../middleware/upload.middleware');
 const { mailService } = require('../services');
+const { extractText } = require('../services/pdfService');
 
 const SYLLABUS_STATUSES = ['UPLOADED', 'PROCESSING', 'READY'];
 const SETTINGS_DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
@@ -423,6 +424,37 @@ const uploadSyllabus = catchAsync(async (req, res) => {
       year,
     });
 
+    // Extract text from the syllabus file
+    let extractedText = '';
+    try {
+      extractedText = await extractText(req.file.path);
+      
+      // Log extraction details
+      console.log(`[SYLLABUS_EXTRACTION] ID: ${syllabus.id}`);
+      console.log(`[SYLLABUS_EXTRACTION] Text Length: ${extractedText.length}`);
+      console.log(`[SYLLABUS_EXTRACTION] First 200 chars: ${extractedText.substring(0, 200)}`);
+      
+      // Save extracted text to database
+      const updatedSyllabus = await SyllabusLibrary.updateById(syllabus.id, {
+        extracted_text: extractedText,
+      });
+      
+      // Verify it was saved
+      const verifiedSyllabus = await SyllabusLibrary.findById(syllabus.id);
+      console.log(`[SYLLABUS_VERIFICATION] ID: ${verifiedSyllabus.id}`);
+      console.log(`[SYLLABUS_VERIFICATION] Subject: ${verifiedSyllabus.subject}`);
+      console.log(`[SYLLABUS_VERIFICATION] Extracted Text Length: ${verifiedSyllabus.extracted_text?.length || 0}`);
+      
+      // Validate storage
+      if (!verifiedSyllabus.extracted_text || verifiedSyllabus.extracted_text.length === 0) {
+        throw ApiError.internal('Failed to store extracted syllabus text in database');
+      }
+    } catch (extractionError) {
+      logger.error('Syllabus text extraction error:', extractionError.message);
+      // Log but continue - extraction failure shouldn't block upload
+      console.error(`[SYLLABUS_EXTRACTION_ERROR] ID: ${syllabus.id} - ${extractionError.message}`);
+    }
+
     sendSuccess(res, HttpStatus.CREATED, 'Syllabus uploaded successfully', {
       syllabus: mapSyllabusRecord(syllabus),
     });
@@ -681,6 +713,27 @@ const downloadSyllabus = catchAsync(async (req, res) => {
   }
 
   res.download(path.resolve(syllabus.file_path), syllabus.original_file_name || undefined);
+});
+
+const getSyllabusDebugInfo = catchAsync(async (req, res) => {
+  const { syllabusId } = req.params;
+
+  const syllabus = await SyllabusLibrary.findById(syllabusId);
+
+  if (!syllabus) {
+    throw ApiError.notFound('Syllabus not found');
+  }
+
+  const extractedText = syllabus.extracted_text || '';
+
+  sendSuccess(res, HttpStatus.OK, 'Syllabus debug info', {
+    id: syllabus.id,
+    subject: syllabus.subject,
+    branch: syllabus.branch,
+    year: syllabus.year,
+    extracted_text_preview: extractedText.substring(0, 1000),
+    extracted_text_length: extractedText.length,
+  });
 });
 
 const getSyllabusOverview = catchAsync(async (req, res) => {
@@ -955,6 +1008,7 @@ module.exports = {
   uploadSyllabus,
   getSyllabusLibrary,
   getSyllabusById,
+  getSyllabusDebugInfo,
   updateSyllabus,
   updateSyllabusStatus,
   deleteSyllabus,

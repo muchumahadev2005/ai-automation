@@ -32,22 +32,10 @@ async function migrateSyllabusLibrary() {
       $$;
     `);
 
+    // Add extracted_text column if missing
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS syllabus_library (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        subject VARCHAR(255) NOT NULL,
-        branch VARCHAR(50) NOT NULL,
-        department VARCHAR(100) NOT NULL,
-        year INTEGER NOT NULL CHECK (year >= 1 AND year <= 8),
-        file_path VARCHAR(500) NOT NULL,
-        original_file_name VARCHAR(255) NOT NULL,
-        mime_type VARCHAR(120) NOT NULL,
-        file_size_bytes BIGINT NOT NULL CHECK (file_size_bytes > 0),
-        status syllabus_upload_status NOT NULL DEFAULT 'UPLOADED',
-        uploaded_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-      );
+      ALTER TABLE IF EXISTS syllabus_library
+      ADD COLUMN IF NOT EXISTS extracted_text TEXT;
     `);
 
     await pool.query('CREATE INDEX IF NOT EXISTS idx_syllabus_branch ON syllabus_library(branch)');

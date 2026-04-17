@@ -66,6 +66,7 @@ router.get('/syllabus/options', adminController.getSyllabusOptions);
 router.get('/syllabus/activity', adminController.getRecentActivity);
 router.get('/syllabus', adminController.getSyllabusLibrary);
 router.get('/syllabus/:syllabusId', uuidParam('syllabusId'), handleValidation, adminController.getSyllabusById);
+router.get('/syllabus/:syllabusId/debug', uuidParam('syllabusId'), handleValidation, adminController.getSyllabusDebugInfo);
 router.get('/syllabus/:syllabusId/download', uuidParam('syllabusId'), handleValidation, adminController.downloadSyllabus);
 router.post('/syllabus', uploadSyllabus, adminController.uploadSyllabus);
 router.put('/syllabus/:syllabusId', uuidParam('syllabusId'), handleValidation, uploadSyllabus, adminController.updateSyllabus);
