@@ -8,7 +8,9 @@
     "dev": "nodemon server.js",
     "db:init": "node database/init.js",
     "db:seed": "node database/seed.js",
-    "db:migrate:admin": "node database/migrateAdminRole.js"
+    "db:migrate:admin": "node database/migrateAdminRole.js",
+    "db:migrate:syllabus": "node database/migrateSyllabusLibrary.js",
+    "db:migrate:settings": "node database/migrateSystemSettings.js"
   },
   "keywords": [
     "exam",

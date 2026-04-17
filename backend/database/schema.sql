@@ -13,6 +13,8 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 DROP TABLE IF EXISTS answers CASCADE;
 DROP TABLE IF EXISTS attempts CASCADE;
 DROP TABLE IF EXISTS questions CASCADE;
+DROP TABLE IF EXISTS syllabus_library CASCADE;
+DROP TABLE IF EXISTS system_settings CASCADE;
 DROP TABLE IF EXISTS exams CASCADE;
 DROP TABLE IF EXISTS teacher_invitations CASCADE;
 DROP TABLE IF EXISTS students_master CASCADE;
@@ -22,6 +24,7 @@ DROP TYPE IF EXISTS user_role CASCADE;
 DROP TYPE IF EXISTS exam_status CASCADE;
 DROP TYPE IF EXISTS attempt_status CASCADE;
 DROP TYPE IF EXISTS correct_option CASCADE;
+DROP TYPE IF EXISTS syllabus_upload_status CASCADE;
 
 -- ========================================
 -- CREATE ENUM TYPES
@@ -38,6 +41,9 @@ CREATE TYPE attempt_status AS ENUM ('IN_PROGRESS', 'SUBMITTED');
 
 -- Correct option type
 CREATE TYPE correct_option AS ENUM ('A', 'B', 'C', 'D');
+
+-- Syllabus upload status
+CREATE TYPE syllabus_upload_status AS ENUM ('UPLOADED', 'PROCESSING', 'READY');
 
 -- ========================================
 -- CREATE TABLES
@@ -61,7 +67,24 @@ CREATE TABLE users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2️⃣ STUDENTS MASTER TABLE (admin-managed source of truth)
+-- 2️⃣ SYSTEM SETTINGS TABLE (singleton row for platform configuration)
+CREATE TABLE system_settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    smtp_host VARCHAR(255) NOT NULL DEFAULT '',
+    smtp_port INTEGER NOT NULL DEFAULT 587 CHECK (smtp_port > 0 AND smtp_port <= 65535),
+    smtp_user VARCHAR(255) NOT NULL DEFAULT '',
+    smtp_password TEXT NOT NULL DEFAULT '',
+    gemini_api_key TEXT NOT NULL DEFAULT '',
+    ollama_url VARCHAR(500) NOT NULL DEFAULT 'http://localhost:11434',
+    default_question_count INTEGER NOT NULL DEFAULT 20 CHECK (default_question_count > 0 AND default_question_count <= 200),
+    default_difficulty VARCHAR(20) NOT NULL DEFAULT 'Medium' CHECK (default_difficulty IN ('Easy', 'Medium', 'Hard')),
+    email_notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    updated_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3️⃣ STUDENTS MASTER TABLE (admin-managed source of truth)
 CREATE TABLE students_master (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     registration_number VARCHAR(50) UNIQUE NOT NULL,
@@ -72,7 +95,7 @@ CREATE TABLE students_master (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3️⃣ TEACHER INVITATIONS TABLE
+-- 4️⃣ TEACHER INVITATIONS TABLE
 CREATE TABLE teacher_invitations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) NOT NULL,
@@ -87,7 +110,7 @@ CREATE TABLE teacher_invitations (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4️⃣ EXAMS TABLE
+-- 5️⃣ EXAMS TABLE
 CREATE TABLE exams (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR(255) NOT NULL,
@@ -108,7 +131,24 @@ CREATE TABLE exams (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5️⃣ QUESTIONS TABLE
+-- 6️⃣ SYLLABUS LIBRARY TABLE
+CREATE TABLE syllabus_library (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    subject VARCHAR(255) NOT NULL,
+    branch VARCHAR(50) NOT NULL,
+    department VARCHAR(100) NOT NULL,
+    year INTEGER NOT NULL CHECK (year >= 1 AND year <= 8),
+    file_path VARCHAR(500) NOT NULL,
+    original_file_name VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(120) NOT NULL,
+    file_size_bytes BIGINT NOT NULL CHECK (file_size_bytes > 0),
+    status syllabus_upload_status NOT NULL DEFAULT 'UPLOADED',
+    uploaded_by UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7️⃣ QUESTIONS TABLE
 CREATE TABLE questions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     exam_id UUID NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
@@ -123,7 +163,7 @@ CREATE TABLE questions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 6️⃣ ATTEMPTS TABLE
+-- 8️⃣ ATTEMPTS TABLE
 CREATE TABLE attempts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     exam_id UUID NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
@@ -141,7 +181,7 @@ CREATE TABLE attempts (
     UNIQUE(exam_id, student_id)
 );
 
--- 7️⃣ ANSWERS TABLE
+-- 9️⃣ ANSWERS TABLE
 CREATE TABLE answers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     attempt_id UUID NOT NULL REFERENCES attempts(id) ON DELETE CASCADE,
@@ -164,6 +204,9 @@ CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_branch_year ON users(branch, year);
 CREATE INDEX idx_users_google_id ON users(google_id);
 
+-- System settings indexes
+CREATE INDEX idx_system_settings_updated_by ON system_settings(updated_by);
+
 -- Students master indexes
 CREATE INDEX idx_students_master_reg_no ON students_master(registration_number);
 CREATE INDEX idx_students_master_name ON students_master(name);
@@ -179,6 +222,14 @@ CREATE INDEX idx_exams_branch_year ON exams(branch, year);
 CREATE INDEX idx_exams_status ON exams(status);
 CREATE INDEX idx_exams_created_by ON exams(created_by);
 CREATE INDEX idx_exams_start_end_time ON exams(start_time, end_time);
+
+-- Syllabus library indexes
+CREATE INDEX idx_syllabus_branch ON syllabus_library(branch);
+CREATE INDEX idx_syllabus_department ON syllabus_library(department);
+CREATE INDEX idx_syllabus_year ON syllabus_library(year);
+CREATE INDEX idx_syllabus_status ON syllabus_library(status);
+CREATE INDEX idx_syllabus_uploaded_by ON syllabus_library(uploaded_by);
+CREATE INDEX idx_syllabus_created_at ON syllabus_library(created_at DESC);
 
 -- Questions indexes
 CREATE INDEX idx_questions_exam_id ON questions(exam_id);
@@ -213,6 +264,18 @@ CREATE TRIGGER update_users_updated_at
 -- Apply trigger to exams table
 CREATE TRIGGER update_exams_updated_at
     BEFORE UPDATE ON exams
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Apply trigger to system settings table
+CREATE TRIGGER update_system_settings_updated_at
+    BEFORE UPDATE ON system_settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Apply trigger to syllabus library table
+CREATE TRIGGER update_syllabus_library_updated_at
+    BEFORE UPDATE ON syllabus_library
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
@@ -256,9 +319,11 @@ CREATE TRIGGER update_question_count
 -- ========================================
 
 COMMENT ON TABLE users IS 'Stores all users (admins, teachers, and students)';
+COMMENT ON TABLE system_settings IS 'Singleton table storing admin-configurable platform settings';
 COMMENT ON TABLE students_master IS 'Admin-managed student registry used for CSV sync and analytics';
 COMMENT ON TABLE teacher_invitations IS 'Teacher invitation lifecycle and secure setup tokens';
 COMMENT ON TABLE exams IS 'Stores exam metadata created by teachers';
+COMMENT ON TABLE syllabus_library IS 'Admin-managed syllabus file library for branch/department/year/subject combinations';
 COMMENT ON TABLE questions IS 'Stores MCQ questions for each exam';
 COMMENT ON TABLE attempts IS 'Tracks student exam attempts';
 COMMENT ON TABLE answers IS 'Stores individual answers for each attempt';

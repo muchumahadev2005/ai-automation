@@ -100,6 +100,7 @@ const AppRoutes = () => {
           {/* Admin Routes */}
           <Route element={<RoleRoute allowedRole="ADMIN" />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/syllabus" element={<AdminDashboard />} />
             <Route path="/admin/students" element={<StudentManagement />} />
             <Route path="/admin/teachers" element={<TeacherManagement />} />
             <Route path="/admin/analytics" element={<Analytics />} />

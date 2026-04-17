@@ -12,6 +12,7 @@ const {
   handleValidation,
   uuidParam,
   uploadCsv,
+  uploadSyllabus,
   adminUpdateStudentRules,
   teacherInviteRules,
   teacherInviteCompleteRules,
@@ -32,6 +33,8 @@ router.use(adminOnly);
 
 // Dashboard
 router.get('/dashboard', adminController.getDashboardStats);
+router.get('/settings/system', adminController.getSystemSettings);
+router.put('/settings/system', adminController.updateSystemSettings);
 
 // Student management
 router.get('/students', adminController.getStudents);
@@ -56,5 +59,17 @@ router.post('/teachers/invite', teacherInviteRules, handleValidation, adminContr
 
 // Analytics
 router.get('/analytics', adminController.getAnalytics);
+
+// Syllabus library management
+router.get('/syllabus/overview', adminController.getSyllabusOverview);
+router.get('/syllabus/options', adminController.getSyllabusOptions);
+router.get('/syllabus/activity', adminController.getRecentActivity);
+router.get('/syllabus', adminController.getSyllabusLibrary);
+router.get('/syllabus/:syllabusId', uuidParam('syllabusId'), handleValidation, adminController.getSyllabusById);
+router.get('/syllabus/:syllabusId/download', uuidParam('syllabusId'), handleValidation, adminController.downloadSyllabus);
+router.post('/syllabus', uploadSyllabus, adminController.uploadSyllabus);
+router.put('/syllabus/:syllabusId', uuidParam('syllabusId'), handleValidation, uploadSyllabus, adminController.updateSyllabus);
+router.patch('/syllabus/:syllabusId/status', uuidParam('syllabusId'), handleValidation, adminController.updateSyllabusStatus);
+router.delete('/syllabus/:syllabusId', uuidParam('syllabusId'), handleValidation, adminController.deleteSyllabus);
 
 module.exports = router;

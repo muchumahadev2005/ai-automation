@@ -2,7 +2,13 @@ import api from "./api";
 import type {
   AdminDashboardStats,
   PlatformAnalytics,
+  SyllabusActivityItem,
+  SyllabusItem,
+  SyllabusLibraryResponse,
+  SyllabusOptions,
+  SyllabusStatus,
   StudentMasterRecord,
+  SystemSettings,
   TeacherInvitation,
 } from "../types/admin.types";
 
@@ -93,6 +99,105 @@ const getAnalytics = async (): Promise<PlatformAnalytics> => {
   return response.data.data;
 };
 
+const uploadSyllabus = async (payload: {
+  subject: string;
+  branch: string;
+  department: string;
+  year: string;
+  file: File;
+}): Promise<SyllabusItem> => {
+  const formData = new FormData();
+  formData.append("subject", payload.subject);
+  formData.append("branch", payload.branch);
+  formData.append("department", payload.department);
+  formData.append("year", payload.year);
+  formData.append("syllabus", payload.file);
+
+  const response = await api.post("/admin/syllabus", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data.data.syllabus;
+};
+
+const getSyllabusLibrary = async (params?: {
+  search?: string;
+  branch?: string;
+  department?: string;
+  year?: string;
+  status?: SyllabusStatus;
+  page?: number;
+  limit?: number;
+}): Promise<SyllabusLibraryResponse> => {
+  const response = await api.get("/admin/syllabus", { params });
+  return response.data.data;
+};
+
+const updateSyllabusStatus = async (
+  syllabusId: string,
+  status: SyllabusStatus,
+): Promise<SyllabusItem> => {
+  const response = await api.patch(`/admin/syllabus/${syllabusId}/status`, {
+    status,
+  });
+
+  return response.data.data.syllabus;
+};
+
+const deleteSyllabus = async (syllabusId: string): Promise<void> => {
+  await api.delete(`/admin/syllabus/${syllabusId}`);
+};
+
+const getSyllabusOptions = async (): Promise<SyllabusOptions> => {
+  const response = await api.get("/admin/syllabus/options");
+  return response.data.data;
+};
+
+const getSyllabusActivity = async (
+  limit = 10,
+): Promise<SyllabusActivityItem[]> => {
+  const response = await api.get("/admin/syllabus/activity", {
+    params: { limit },
+  });
+
+  return response.data.data.activity || [];
+};
+
+const downloadSyllabus = async (
+  syllabusId: string,
+): Promise<{ blob: Blob; filename: string }> => {
+  const response = await api.get(`/admin/syllabus/${syllabusId}/download`, {
+    responseType: "blob",
+  });
+
+  const disposition = String(response.headers["content-disposition"] || "");
+  const encodedMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+
+  const filename = encodedMatch?.[1]
+    ? decodeURIComponent(encodedMatch[1])
+    : plainMatch?.[1] || "syllabus";
+
+  return {
+    blob: response.data as Blob,
+    filename,
+  };
+};
+
+const getSystemSettings = async (): Promise<SystemSettings> => {
+  const response = await api.get("/admin/settings/system");
+  return response.data.data.settings;
+};
+
+const updateSystemSettings = async (
+  payload: Partial<SystemSettings>,
+): Promise<SystemSettings> => {
+  const response = await api.put("/admin/settings/system", payload);
+  return response.data.data.settings;
+};
+
 export default {
   getDashboardStats,
   getStudents,
@@ -104,4 +209,13 @@ export default {
   getTeacherInviteDetails,
   completeTeacherInvite,
   getAnalytics,
+  uploadSyllabus,
+  getSyllabusLibrary,
+  updateSyllabusStatus,
+  deleteSyllabus,
+  getSyllabusOptions,
+  getSyllabusActivity,
+  downloadSyllabus,
+  getSystemSettings,
+  updateSystemSettings,
 };

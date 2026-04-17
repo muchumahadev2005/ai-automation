@@ -10,6 +10,8 @@ const Attempt = require('./Attempt');
 const Answer = require('./Answer');
 const StudentMaster = require('./StudentMaster');
 const TeacherInvitation = require('./TeacherInvitation');
+const SyllabusLibrary = require('./SyllabusLibrary');
+const SystemSettings = require('./SystemSettings');
 
 module.exports = {
   User,
@@ -19,4 +21,6 @@ module.exports = {
   Answer,
   StudentMaster,
   TeacherInvitation,
+  SyllabusLibrary,
+  SystemSettings,
 };

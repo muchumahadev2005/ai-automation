@@ -36,9 +36,11 @@ async function initDatabase() {
     console.log('');
     console.log('📋 Created tables:');
     console.log('   - users');
+    console.log('   - system_settings');
     console.log('   - students_master');
     console.log('   - teacher_invitations');
     console.log('   - exams');
+    console.log('   - syllabus_library');
     console.log('   - questions');
     console.log('   - attempts');
     console.log('   - answers');
