@@ -4,13 +4,13 @@
  * Powered by n8n and PGVector search
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, Loader, AlertCircle } from 'lucide-react';
-import n8nService from '../../services/n8nService';
+import React, { useState, useRef, useEffect } from "react";
+import { MessageCircle, Send, Loader, AlertCircle } from "lucide-react";
+import n8nService from "../../services/n8nService";
 
 interface QAMessage {
   id: string;
-  type: 'question' | 'answer';
+  type: "question" | "answer";
   content: string;
   timestamp: Date;
   isLoading?: boolean;
@@ -24,33 +24,33 @@ interface FormState {
 }
 
 const initialFormState: FormState = {
-  department: '',
-  year: '',
-  subject: '',
-  chatInput: '',
+  department: "",
+  year: "",
+  subject: "",
+  chatInput: "",
 };
 
 // Sample options - these could be fetched from backend
 const departmentOptions = [
-  'CSE',
-  'AIML',
-  'IT',
-  'CSD',
-  'AIDS',
-  'CSIT',
-  'Mechanical',
-  'Civil',
+  "CSE",
+  "AIML",
+  "IT",
+  "CSD",
+  "AIDS",
+  "CSIT",
+  "Mechanical",
+  "Civil",
 ];
 
 const yearOptions = [
-  { label: 'First Year', value: '1-1' },
-  { label: 'First Year (II)', value: '1-2' },
-  { label: 'Second Year', value: '2-1' },
-  { label: 'Second Year (II)', value: '2-2' },
-  { label: 'Third Year', value: '3-1' },
-  { label: 'Third Year (II)', value: '3-2' },
-  { label: 'Final Year', value: '4-1' },
-  { label: 'Final Year (II)', value: '4-2' },
+  { label: "First Year", value: "1-1" },
+  { label: "First Year (II)", value: "1-2" },
+  { label: "Second Year", value: "2-1" },
+  { label: "Second Year (II)", value: "2-2" },
+  { label: "Third Year", value: "3-1" },
+  { label: "Third Year (II)", value: "3-2" },
+  { label: "Final Year", value: "4-1" },
+  { label: "Final Year (II)", value: "4-2" },
 ];
 
 const SyllabusQA: React.FC = () => {
@@ -61,7 +61,7 @@ const SyllabusQA: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -69,7 +69,9 @@ const SyllabusQA: React.FC = () => {
   }, [messages]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormState((prev) => ({
@@ -87,7 +89,7 @@ const SyllabusQA: React.FC = () => {
       !formState.subject ||
       !formState.chatInput.trim()
     ) {
-      setError('Please fill all fields and enter a question');
+      setError("Please fill all fields and enter a question");
       return;
     }
 
@@ -97,19 +99,19 @@ const SyllabusQA: React.FC = () => {
     const questionId = `msg-${Date.now()}`;
     const questionMessage: QAMessage = {
       id: questionId,
-      type: 'question',
+      type: "question",
       content: formState.chatInput,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, questionMessage]);
-    setFormState((prev) => ({ ...prev, chatInput: '' }));
+    setFormState((prev) => ({ ...prev, chatInput: "" }));
     setIsLoading(true);
 
     try {
       // Send question to n8n
       const response = await n8nService.askTeacherQuestion({
-        type: 'teacher',
+        type: "teacher",
         department: formState.department,
         year: formState.year,
         subject: formState.subject,
@@ -120,7 +122,7 @@ const SyllabusQA: React.FC = () => {
       const answerId = `msg-${Date.now()}-answer`;
       const answerMessage: QAMessage = {
         id: answerId,
-        type: 'answer',
+        type: "answer",
         content: response.answer,
         timestamp: new Date(),
       };
@@ -128,14 +130,14 @@ const SyllabusQA: React.FC = () => {
       setMessages((prev) => [...prev, answerMessage]);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to get answer';
+        err instanceof Error ? err.message : "Failed to get answer";
       setError(errorMessage);
 
       // Add error message to chat
       const errorId = `msg-${Date.now()}-error`;
       const errorMsg: QAMessage = {
         id: errorId,
-        type: 'answer',
+        type: "answer",
         content: `Error: ${errorMessage}`,
         timestamp: new Date(),
       };
@@ -243,22 +245,24 @@ const SyllabusQA: React.FC = () => {
                 <div
                   key={message.id}
                   className={`flex ${
-                    message.type === 'question' ? 'justify-end' : 'justify-start'
+                    message.type === "question"
+                      ? "justify-end"
+                      : "justify-start"
                   }`}
                 >
                   <div
                     className={`rounded-lg px-4 py-3 max-w-xs sm:max-w-md lg:max-w-lg break-words ${
-                      message.type === 'question'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 text-slate-900 border border-slate-200'
+                      message.type === "question"
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-900 border border-slate-200"
                     }`}
                   >
                     <p className="text-sm leading-relaxed">{message.content}</p>
                     <p
                       className={`text-xs mt-2 ${
-                        message.type === 'question'
-                          ? 'text-blue-100'
-                          : 'text-slate-500'
+                        message.type === "question"
+                          ? "text-blue-100"
+                          : "text-slate-500"
                       }`}
                     >
                       {message.timestamp.toLocaleTimeString()}

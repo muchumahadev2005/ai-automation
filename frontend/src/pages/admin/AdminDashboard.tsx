@@ -12,7 +12,11 @@ import {
 } from "lucide-react";
 import adminService from "../../services/adminService";
 import n8nService from "../../services/n8nService";
-import { extractTextFromFile, isValidFileFormat, isFileSizeValid } from "../../utils/textExtraction";
+import {
+  extractTextFromFile,
+  isValidFileFormat,
+  isFileSizeValid,
+} from "../../utils/textExtraction";
 import type {
   AdminDashboardStats,
   SyllabusItem,
@@ -252,12 +256,12 @@ const AdminDashboard: React.FC = () => {
     }
 
     const [file] = files;
-    
+
     if (!isValidFileFormat(file)) {
       setSyllabusError("Only PDF, DOC, and DOCX files are allowed");
       return;
     }
-    
+
     if (!isFileSizeValid(file)) {
       setSyllabusError("File size must be less than 50 MB");
       return;
@@ -293,15 +297,17 @@ const AdminDashboard: React.FC = () => {
     try {
       // Extract text from the selected file
       const syllabusText = await extractTextFromFile(selectedFile);
-      
+
       if (!syllabusText || syllabusText.trim().length === 0) {
-        setSyllabusError("Could not extract text from the uploaded file. Please ensure the file contains readable content.");
+        setSyllabusError(
+          "Could not extract text from the uploaded file. Please ensure the file contains readable content.",
+        );
         return;
       }
 
       // Send to n8n webhook with the extracted text
       await n8nService.uploadSyllabusToN8N({
-        type: 'admin',
+        type: "admin",
         branch: formState.branch,
         department: formState.department,
         year: formState.year,
@@ -311,7 +317,7 @@ const AdminDashboard: React.FC = () => {
 
       setFormState(initialFormState);
       setSelectedFile(null);
-      
+
       // Optionally refresh the syllabus library to show new entry
       // (n8n processes it in the background)
       await loadSyllabusData();
