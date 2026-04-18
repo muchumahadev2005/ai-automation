@@ -9,7 +9,7 @@ import EditExam from "../pages/teacher/EditExam";
 import ReviewQuestions from "../pages/teacher/ReviewQuestions";
 import TeacherResults from "../pages/teacher/TeacherResults";
 import TeacherSetupPassword from "../pages/teacher/TeacherSetupPassword";
-import SyllabusQA from "../pages/teacher/SyllabusQA";
+import GenerateQuestions from "../pages/teacher/GenerateQuestions";
 
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import StudentManagement from "../pages/admin/StudentManagement";
@@ -96,7 +96,10 @@ const AppRoutes = () => {
               path="/teacher/results/:examId"
               element={<TeacherResults />}
             />
-            <Route path="/teacher/syllabus-qa" element={<SyllabusQA />} />
+            <Route
+              path="/teacher/generate-questions"
+              element={<GenerateQuestions />}
+            />
           </Route>
 
           {/* Admin Routes */}
