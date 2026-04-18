@@ -222,7 +222,11 @@ const GenerateQuestions: React.FC = () => {
   };
 
   const handlePublishExam = async () => {
-    if (!publishFormState.examName || !publishFormState.startDate || !publishFormState.endDate) {
+    if (
+      !publishFormState.examName ||
+      !publishFormState.startDate ||
+      !publishFormState.endDate
+    ) {
       setError("Please fill exam name, start date, and end date");
       return;
     }
@@ -252,7 +256,7 @@ const GenerateQuestions: React.FC = () => {
       };
 
       const response = await api.post("/exams/publish", payload);
-      
+
       if (response.data.success) {
         setSuccessMessage("Exam published successfully!");
         setGeneratedQuestions(null);
@@ -810,19 +814,33 @@ const GenerateQuestions: React.FC = () => {
               <div className="p-5 sm:p-7 space-y-6">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-100">
-                    <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-4 h-4 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900">Publish Exam</h2>
+                  <h2 className="text-2xl font-bold text-slate-900">
+                    Publish Exam
+                  </h2>
                 </div>
 
                 {/* Exam Details */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-sm font-semibold text-slate-900">Exam Information</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      Exam Information
+                    </h3>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label className="text-sm font-medium text-slate-700">
                       Exam Name *
@@ -830,7 +848,12 @@ const GenerateQuestions: React.FC = () => {
                         type="text"
                         placeholder="e.g., Operating Systems Midterm"
                         value={publishFormState.examName}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, examName: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            examName: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -841,7 +864,12 @@ const GenerateQuestions: React.FC = () => {
                         type="number"
                         min="1"
                         value={publishFormState.totalMarks}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, totalMarks: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            totalMarks: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -852,7 +880,12 @@ const GenerateQuestions: React.FC = () => {
                     <textarea
                       placeholder="Add exam instructions or description"
                       value={publishFormState.description}
-                      onChange={(e) => setPublishFormState(prev => ({ ...prev, description: e.target.value }))}
+                      onChange={(e) =>
+                        setPublishFormState((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       rows={3}
                       className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all resize-none"
                     />
@@ -862,7 +895,9 @@ const GenerateQuestions: React.FC = () => {
                 {/* Date & Time */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
-                    <h3 className="text-sm font-semibold text-slate-900">Exam Schedule</h3>
+                    <h3 className="text-sm font-semibold text-slate-900">
+                      Exam Schedule
+                    </h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -871,7 +906,12 @@ const GenerateQuestions: React.FC = () => {
                       <input
                         type="date"
                         value={publishFormState.startDate}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, startDate: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            startDate: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -881,7 +921,12 @@ const GenerateQuestions: React.FC = () => {
                       <input
                         type="time"
                         value={publishFormState.startTime}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, startTime: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            startTime: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -891,7 +936,12 @@ const GenerateQuestions: React.FC = () => {
                       <input
                         type="date"
                         value={publishFormState.endDate}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, endDate: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            endDate: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -901,7 +951,12 @@ const GenerateQuestions: React.FC = () => {
                       <input
                         type="time"
                         value={publishFormState.endTime}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, endTime: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            endTime: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -913,7 +968,12 @@ const GenerateQuestions: React.FC = () => {
                         min="15"
                         step="15"
                         value={publishFormState.duration}
-                        onChange={(e) => setPublishFormState(prev => ({ ...prev, duration: e.target.value }))}
+                        onChange={(e) =>
+                          setPublishFormState((prev) => ({
+                            ...prev,
+                            duration: e.target.value,
+                          }))
+                        }
                         className="mt-2 w-full rounded-lg border border-green-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-green-400 focus:ring-2 focus:ring-green-100 transition-all"
                       />
                     </label>
@@ -938,8 +998,18 @@ const GenerateQuestions: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                          />
                         </svg>
                         Publish Exam
                       </>

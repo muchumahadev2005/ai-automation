@@ -9,6 +9,7 @@ const questionController = require('./question.controller');
 const attemptController = require('./attempt.controller');
 const resultController = require('./result.controller');
 const adminController = require('./admin.controller');
+const teacherController = require('./teacher.controller');
 
 module.exports = {
   authController,
@@ -17,4 +18,5 @@ module.exports = {
   attemptController,
   resultController,
   adminController,
+  teacherController,
 };
