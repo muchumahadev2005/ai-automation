@@ -38,6 +38,7 @@ router.put('/settings/system', adminController.updateSystemSettings);
 
 // Student management
 router.get('/students', adminController.getStudents);
+router.post('/students', adminController.createStudent);
 router.post('/students/upload', uploadCsv, adminController.uploadStudentsCsv);
 router.put(
   '/students/:studentId',

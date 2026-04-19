@@ -11,6 +11,8 @@ interface User {
   role: UserRole;
   branch?: string | null;
   year?: number | null;
+  registerNumber?: string | null;
+  profileCompleted?: boolean;
 }
 
 interface AuthContextType {
@@ -20,7 +22,7 @@ interface AuthContextType {
   isInitializing: boolean;
   login: (userData: User) => void;
   logout: () => void;
-  completeProfile: () => void;
+  completeProfile: (updates?: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -82,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                   role: me.role,
                   branch: me.branch ?? null,
                   year: me.year ?? null,
+                  registerNumber: me.registerNumber ?? null,
                 };
                 hydratedProfileCompleted = Boolean(me.profileCompleted);
 
@@ -126,8 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = (userData: User) => {
     setUser(userData);
 
-    // Non-students don't need profile completion; students start incomplete
-    const nextProfileCompleted = userData.role !== "STUDENT";
+    const nextProfileCompleted =
+      userData.role !== "STUDENT" || Boolean(userData.profileCompleted);
     setProfileCompleted(nextProfileCompleted);
 
     try {
@@ -163,13 +166,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const completeProfile = () => {
+  const completeProfile = (updates?: Partial<User>) => {
+    const nextUser = user ? { ...user, ...(updates || {}) } : user;
+    setUser(nextUser);
     setProfileCompleted(true);
 
     try {
       localStorage.setItem(
         AUTH_STORAGE_KEY,
-        JSON.stringify({ user, profileCompleted: true }),
+        JSON.stringify({ user: nextUser, profileCompleted: true }),
       );
     } catch {
       // ignore storage errors

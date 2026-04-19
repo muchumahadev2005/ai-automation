@@ -9,7 +9,7 @@ const StudentMaster = {
   async findAll(search = '') {
     if (!search) {
       const result = await db.query(
-        `SELECT id, registration_number, name, branch, department, created_at, updated_at
+        `SELECT id, registration_number, name, email, branch, department, created_at, updated_at
          FROM students_master
          ORDER BY registration_number ASC`
       );
@@ -20,7 +20,7 @@ const StudentMaster = {
     const searchPattern = `%${search}%`;
 
     const result = await db.query(
-      `SELECT id, registration_number, name, branch, department, created_at, updated_at
+      `SELECT id, registration_number, name, email, branch, department, created_at, updated_at
        FROM students_master
        WHERE registration_number ILIKE $1 OR name ILIKE $1
        ORDER BY registration_number ASC`,
@@ -32,7 +32,7 @@ const StudentMaster = {
 
   async findById(id) {
     const result = await db.query(
-      `SELECT id, registration_number, name, branch, department, created_at, updated_at
+      `SELECT id, registration_number, name, email, branch, department, created_at, updated_at
        FROM students_master
        WHERE id = $1`,
       [id]
@@ -42,7 +42,7 @@ const StudentMaster = {
   },
 
   async updateById(id, updateData) {
-    const allowedFields = ['registration_number', 'name', 'branch', 'department'];
+    const allowedFields = ['registration_number', 'name', 'email', 'branch', 'department'];
     const updates = [];
     const values = [];
     let index = 1;
@@ -66,7 +66,7 @@ const StudentMaster = {
       `UPDATE students_master
        SET ${updates.join(', ')}
        WHERE id = $${index}
-       RETURNING id, registration_number, name, branch, department, created_at, updated_at`,
+       RETURNING id, registration_number, name, email, branch, department, created_at, updated_at`,
       values
     );
 
@@ -80,6 +80,19 @@ const StudentMaster = {
     );
 
     return !!result.rows[0];
+  },
+
+  async create(data) {
+    const { registration_number, name, email, branch, department } = data;
+
+    const result = await db.query(
+      `INSERT INTO students_master (registration_number, name, email, branch, department)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, registration_number, name, email, branch, department, created_at, updated_at`,
+      [registration_number, name, email, branch || '', department]
+    );
+
+    return result.rows[0] || null;
   },
 
   async upsertMany(rows) {

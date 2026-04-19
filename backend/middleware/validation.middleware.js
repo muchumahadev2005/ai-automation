@@ -74,6 +74,38 @@ const loginRules = [
     .notEmpty().withMessage('Password is required'),
 ];
 
+const forgotPasswordSendOtpRules = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Invalid email format')
+    .normalizeEmail(),
+];
+
+const forgotPasswordVerifyRules = [
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('otp')
+    .trim()
+    .notEmpty().withMessage('OTP is required')
+    .isLength({ min: 6, max: 6 }).withMessage('OTP must be 6 digits')
+    .isNumeric().withMessage('OTP must contain only digits'),
+  body('password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('confirmPassword')
+    .notEmpty().withMessage('Confirm password is required')
+    .custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error('Passwords do not match');
+      }
+      return true;
+    }),
+];
+
 const completeProfileRules = [
   body('name')
     .trim()
@@ -285,6 +317,8 @@ module.exports = {
   handleValidation,
   registerRules,
   loginRules,
+  forgotPasswordSendOtpRules,
+  forgotPasswordVerifyRules,
   completeProfileRules,
   adminUpdateStudentRules,
   teacherInviteRules,

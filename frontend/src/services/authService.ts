@@ -9,6 +9,7 @@ export interface AuthUser {
   role: UserRole;
   branch?: string | null;
   year?: number | null;
+  registerNumber?: string | null;
   profileCompleted?: boolean;
 }
 

@@ -9,6 +9,7 @@ export interface StudentMasterRecord {
   id: string;
   registration_number: string;
   name: string;
+  email?: string;
   branch: string;
   department: string;
   created_at: string;

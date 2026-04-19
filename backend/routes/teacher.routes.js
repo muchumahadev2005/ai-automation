@@ -11,19 +11,12 @@ const {
   teacherOnly,
   handleValidation,
   uuidParam,
-  rateLimit,
+  aiLimiter,
 } = require('../middleware');
 
 // All routes require authentication and teacher role
 router.use(authenticate);
 router.use(teacherOnly);
-
-// AI rate limiter for question generation
-const aiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20,
-  message: 'Too many requests, please try again later',
-});
 
 // Question Generation
 router.get('/subjects', teacherController.getSubjects);

@@ -11,15 +11,16 @@ const Login: React.FC = () => {
   const [studentPassword, setStudentPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<UserRole>("STUDENT");
 
-  const { login, user, isAuthenticated, profileCompleted, completeProfile } =
-    useAuth();
+  const { login, user, isAuthenticated, profileCompleted } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const successMessage =
     (location.state as any)?.registered === true
       ? "Account created successfully. Please sign in."
-      : null;
+      : (location.state as any)?.passwordReset === true
+        ? "Password reset successful. Please sign in with your new password."
+        : null;
 
   // Navigate after auth state is updated
   useEffect(() => {
@@ -68,12 +69,11 @@ const Login: React.FC = () => {
         name: data.user.name,
         email: data.user.email,
         role: data.user.role,
+        branch: data.user.branch ?? null,
+        year: data.user.year ?? null,
+        registerNumber: data.user.registerNumber ?? null,
+        profileCompleted: data.user.profileCompleted,
       });
-
-      // Existing registration flow collects student details, so mark profile as complete.
-      if (data.user.role === "STUDENT") {
-        completeProfile();
-      }
     } catch (err: any) {
       setError(err?.message || "Invalid email or password. Please try again.");
     } finally {
@@ -101,7 +101,12 @@ const Login: React.FC = () => {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => setSelectedRole(role)}
+                  onClick={() => {
+                    setSelectedRole(role);
+                    setError(null);
+                    setStudentEmail("");
+                    setStudentPassword("");
+                  }}
                   className={`rounded-md px-2 py-2 text-xs font-medium border transition-colors ${
                     selectedRole === role
                       ? "bg-blue-600 text-white border-blue-600"
@@ -113,6 +118,7 @@ const Login: React.FC = () => {
               ))}
             </div>
             <form onSubmit={handleStudentLogin} className="space-y-3">
+              {/* Email Field (always shown) */}
               <div>
                 <input
                   type="email"
@@ -122,6 +128,7 @@ const Login: React.FC = () => {
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
+
               <div>
                 <input
                   type="password"
@@ -131,6 +138,7 @@ const Login: React.FC = () => {
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
+
               <button
                 type="submit"
                 disabled={isLoading}
@@ -139,16 +147,46 @@ const Login: React.FC = () => {
                 {isLoading ? "Signing in..." : "Sign in"}
               </button>
             </form>
-            <p className="mt-3 text-xs text-gray-500 text-center">
-              Don&apos;t have an account?{" "}
-              <button
-                type="button"
-                onClick={() => navigate("/register")}
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Create Account
-              </button>
-            </p>
+
+            {/* Create Account Link - Only for Teacher/Admin */}
+            {selectedRole !== "STUDENT" && (
+              <p className="mt-3 text-xs text-gray-500 text-center">
+                Don&apos;t have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate("/register")}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Create Account
+                </button>
+              </p>
+            )}
+
+            {/* Student Register Link */}
+            {selectedRole === "STUDENT" && (
+              <div className="mt-3 text-xs text-gray-500 text-center space-y-2">
+                <p>
+                  First time?{" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/student/register")}
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Register with Email
+                  </button>
+                </p>
+                <p>
+                  Forgot password?{" "}
+                  <button
+                    type="button"
+                    onClick={() => navigate("/student/forgot-password")}
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Reset with OTP
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

@@ -49,7 +49,7 @@ const User = {
     const result = await db.query(
       `SELECT id, name, email, password, role, branch, year, register_number, 
               employee_id, profile_completed, is_active, created_at
-       FROM users WHERE email = $1`,
+       FROM users WHERE LOWER(email) = LOWER($1)`,
       [email]
     );
     
@@ -129,13 +129,31 @@ const User = {
   },
 
   /**
+   * Update password by email
+   * @param {string} email - User email
+   * @param {string} passwordHash - Hashed password
+   * @returns {Promise<Object|null>} Updated user or null
+   */
+  async updatePasswordByEmail(email, passwordHash) {
+    const result = await db.query(
+      `UPDATE users
+       SET password = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE LOWER(email) = LOWER($2)
+       RETURNING id, name, email, role, is_active`,
+      [passwordHash, email]
+    );
+
+    return result.rows[0] || null;
+  },
+
+  /**
    * Check if email exists
    * @param {string} email - Email to check
    * @returns {Promise<boolean>} True if exists
    */
   async emailExists(email) {
     const result = await db.query(
-      'SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)',
+      'SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(email) = LOWER($1))',
       [email]
     );
     

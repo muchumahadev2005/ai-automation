@@ -4,37 +4,64 @@ import { useAuth } from "../../context/AuthContext";
 import authService from "../../services/authService";
 import Button from "../../components/common/Button";
 
+const BRANCH_OPTIONS = ["CSD", "CSE", "AIDS", "IT", "ECE", "EEE"] as const;
+const YEAR_OPTIONS = [1, 2, 3, 4] as const;
+
 const CompleteProfile: React.FC = () => {
   const navigate = useNavigate();
   const { user, completeProfile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     fullName: user?.name || "",
-    registrationNumber: "",
+    registrationNumber: user?.registerNumber || "",
+    branch: user?.branch || "",
+    year: user?.year ? String(user.year) : "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.branch) {
+      setError("Please select your branch");
+      return;
+    }
+
+    const numericYear = Number(formData.year);
+    if (!numericYear || numericYear < 1 || numericYear > 4) {
+      setError("Please select a valid year");
+      return;
+    }
+
     setIsLoading(true);
+    setError(null);
 
     try {
       if (!user) return;
 
-      await authService.completeStudentProfile({
+      const updatedUser = await authService.completeStudentProfile({
         name: formData.fullName,
-        branch: user.branch ?? null,
-        year: user.year ?? null,
+        branch: formData.branch,
+        year: numericYear,
         registerNumber: formData.registrationNumber,
       });
 
-      completeProfile();
+      completeProfile({
+        name: updatedUser.name,
+        branch: updatedUser.branch ?? formData.branch,
+        year: updatedUser.year ?? numericYear,
+        registerNumber: updatedUser.registerNumber ?? formData.registrationNumber,
+      });
       navigate("/student/dashboard");
-    } catch (error) {
-      console.error("Failed to complete profile:", error);
+    } catch (err: any) {
+      setError(err?.message || "Failed to complete profile. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +80,12 @@ const CompleteProfile: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          {error && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
@@ -81,6 +114,46 @@ const CompleteProfile: React.FC = () => {
               className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
               placeholder="Enter your registration number"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Branch
+            </label>
+            <select
+              name="branch"
+              value={formData.branch}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base bg-white"
+            >
+              <option value="">Select your branch</option>
+              {BRANCH_OPTIONS.map((branch) => (
+                <option key={branch} value={branch}>
+                  {branch}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Year
+            </label>
+            <select
+              name="year"
+              value={formData.year}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base bg-white"
+            >
+              <option value="">Select your year</option>
+              {YEAR_OPTIONS.map((year) => (
+                <option key={year} value={year}>
+                  Year {year}
+                </option>
+              ))}
+            </select>
           </div>
 
           <Button type="submit" isLoading={isLoading} fullWidth>

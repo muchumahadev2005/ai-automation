@@ -41,13 +41,25 @@ const uploadStudentsCsv = async (file: File) => {
   };
 };
 
+const createStudent = async (payload: {
+  registration_number: string;
+  name: string;
+  email: string;
+  department: string;
+  branch?: string;
+}): Promise<StudentMasterRecord> => {
+  const response = await api.post("/admin/students", payload);
+  return response.data.data.student;
+};
+
 const updateStudent = async (
   studentId: string,
   payload: {
-    registrationNumber: string;
-    name: string;
-    branch: string;
-    department: string;
+    registrationNumber?: string;
+    name?: string;
+    email?: string;
+    branch?: string;
+    department?: string;
   },
 ): Promise<StudentMasterRecord> => {
   const response = await api.put(`/admin/students/${studentId}`, payload);
@@ -202,6 +214,7 @@ export default {
   getDashboardStats,
   getStudents,
   uploadStudentsCsv,
+  createStudent,
   updateStudent,
   deleteStudent,
   inviteTeacher,

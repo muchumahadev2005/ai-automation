@@ -228,6 +228,37 @@ const uploadStudentsCsv = catchAsync(async (req, res) => {
   }
 });
 
+const createStudent = catchAsync(async (req, res) => {
+  const { registration_number, name, email, department, branch } = req.body;
+
+  if (!registration_number || !name || !email || !department) {
+    throw ApiError.badRequest('Registration number, name, email, and department are required');
+  }
+
+  // Check if student with same registration number already exists
+  const existingStudent = await db.query(
+    'SELECT id FROM students_master WHERE registration_number = $1',
+    [registration_number]
+  );
+
+  if (existingStudent.rows.length > 0) {
+    throw ApiError.badRequest('Student with this registration number already exists');
+  }
+
+  // Create student record
+  const newStudent = await StudentMaster.create({
+    registration_number: registration_number.trim().toUpperCase(),
+    name: name.trim(),
+    email: email.trim(),
+    branch: branch || '',
+    department: department.trim(),
+  });
+
+  sendSuccess(res, HttpStatus.CREATED, 'Student created successfully', {
+    student: newStudent,
+  });
+});
+
 const updateStudent = catchAsync(async (req, res) => {
   const { studentId } = req.params;
 
@@ -239,6 +270,7 @@ const updateStudent = catchAsync(async (req, res) => {
   const updateData = {
     registrationNumber: req.body.registrationNumber,
     name: req.body.name,
+    email: req.body.email,
     branch: req.body.branch,
     department: req.body.department,
   };
@@ -1001,6 +1033,7 @@ module.exports = {
   getDashboardStats,
   getStudents,
   uploadStudentsCsv,
+  createStudent,
   updateStudent,
   deleteStudent,
   getSystemSettings,

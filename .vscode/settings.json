@@ -1,5 +1,6 @@
 {
   "json.schemaDownload.enable": false,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
   "json.schemas": [
     {
       "fileMatch": [
