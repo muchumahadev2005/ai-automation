@@ -47,6 +47,26 @@ router.post(
   authController.resendStudentForgotPasswordOTP
 );
 
+// Teacher forgot password OTP routes (public)
+router.post(
+  '/teacher/forgot-password/send-otp',
+  forgotPasswordSendOtpRules,
+  handleValidation,
+  authController.sendTeacherForgotPasswordOTP
+);
+router.post(
+  '/teacher/forgot-password/verify-otp-and-reset',
+  forgotPasswordVerifyRules,
+  handleValidation,
+  authController.verifyTeacherForgotPasswordOTPAndReset
+);
+router.post(
+  '/teacher/forgot-password/resend-otp',
+  forgotPasswordSendOtpRules,
+  handleValidation,
+  authController.resendTeacherForgotPasswordOTP
+);
+
 // Protected routes
 router.use(authenticate);
 router.get('/me', authController.getMe);

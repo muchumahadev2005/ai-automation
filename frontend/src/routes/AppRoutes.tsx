@@ -5,6 +5,7 @@ import Register from "../pages/auth/Register";
 import StudentRegister from "../pages/auth/StudentRegister";
 import StudentOTPVerification from "../pages/auth/StudentOTPVerification";
 import StudentForgotPassword from "../pages/auth/StudentForgotPassword";
+import TeacherForgotPassword from "../pages/auth/TeacherForgotPassword";
 
 import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 import CreateExam from "../pages/teacher/CreateExam";
@@ -69,11 +70,15 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/student/register" element={<StudentRegister />} />
-      <Route path="/student/forgot-password" element={<StudentForgotPassword />} />
       <Route
-        path="/student/verify-otp"
-        element={<StudentOTPVerification />}
+        path="/student/forgot-password"
+        element={<StudentForgotPassword />}
       />
+      <Route
+        path="/teacher/forgot-password"
+        element={<TeacherForgotPassword />}
+      />
+      <Route path="/student/verify-otp" element={<StudentOTPVerification />} />
       <Route
         path="/teacher/setup-password"
         element={<TeacherSetupPassword />}

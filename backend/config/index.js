@@ -31,6 +31,12 @@ module.exports = {
   // n8n Automation
   n8n: {
     webhookUrl: process.env.N8N_WEBHOOK_URL || '',
+    examQuestionWebhookUrl:
+      process.env.N8N_EXAM_QUESTION_WEBHOOK_URL || 'http://localhost:5678/webhook/generate-questions',
+    promptQuestionWebhookUrl:
+      process.env.N8N_PROMPT_QUESTION_WEBHOOK_URL || 'http://localhost:5678/webhook/upload-syllabus',
+    evaluateAnswerWebhookUrl:
+      process.env.N8N_EVALUATE_ANSWER_WEBHOOK_URL || 'http://localhost:5678/webhook/evaluate-answer',
   },
 
   // File Upload
@@ -47,7 +53,10 @@ module.exports = {
 
   // CORS
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (process.env.CORS_ORIGIN || 'http://localhost:5173')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
   },
 
   // Frontend URL (for invite links)

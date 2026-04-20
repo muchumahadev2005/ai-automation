@@ -725,6 +725,213 @@ const resendStudentForgotPasswordOTP = catchAsync(async (req, res) => {
   );
 });
 
+/**
+ * Send OTP for teacher forgot password
+ * POST /api/auth/teacher/forgot-password/send-otp
+ */
+const sendTeacherForgotPasswordOTP = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !email.trim()) {
+    throw ApiError.badRequest('Email is required');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findByEmail(normalizedEmail);
+
+  // Always return a generic response to avoid account enumeration.
+  if (!user || user.role !== 'TEACHER' || !user.is_active) {
+    return sendSuccess(
+      res,
+      HttpStatus.OK,
+      'If a teacher account exists for this email, an OTP has been sent.',
+      { email: normalizedEmail, expiresIn: 600 }
+    );
+  }
+
+  const db = require('../config/database');
+  const { mailService } = require('../services');
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await db.query('DELETE FROM teacher_password_reset_otp WHERE email = $1', [normalizedEmail]);
+  await db.query(
+    `INSERT INTO teacher_password_reset_otp (email, otp, expires_at, attempts, max_attempts)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [normalizedEmail, otp, expiresAt, 0, 5]
+  );
+
+  const mailResult = await mailService.sendOTPEmail({
+    to: normalizedEmail,
+    otp,
+    expiresIn: 10,
+  });
+
+  if (!mailResult.delivered) {
+    logger.warn('Teacher forgot password OTP email delivery failed', { email: normalizedEmail });
+  }
+
+  logger.info('Teacher forgot password OTP sent', {
+    email: normalizedEmail,
+    delivered: mailResult.delivered,
+  });
+
+  sendSuccess(
+    res,
+    HttpStatus.OK,
+    'If a teacher account exists for this email, an OTP has been sent.',
+    { email: normalizedEmail, expiresIn: 600 }
+  );
+});
+
+/**
+ * Verify teacher forgot password OTP and reset password
+ * POST /api/auth/teacher/forgot-password/verify-otp-and-reset
+ */
+const verifyTeacherForgotPasswordOTPAndReset = catchAsync(async (req, res) => {
+  const { email, otp, password, confirmPassword } = req.body;
+
+  if (!email || !otp || !password || !confirmPassword) {
+    throw ApiError.badRequest('Email, OTP, password, and confirm password are required');
+  }
+
+  if (password !== confirmPassword) {
+    throw ApiError.badRequest('Passwords do not match');
+  }
+
+  if (password.length < 6) {
+    throw ApiError.badRequest('Password must be at least 6 characters');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findByEmail(normalizedEmail);
+
+  // Do not allow password reset for non-existing or non-teacher accounts.
+  if (!user || user.role !== 'TEACHER' || !user.is_active) {
+    throw ApiError.badRequest('Invalid reset request');
+  }
+
+  const db = require('../config/database');
+
+  const otpResult = await db.query(
+    `SELECT * FROM teacher_password_reset_otp
+     WHERE email = $1 AND verified = FALSE`,
+    [normalizedEmail]
+  );
+
+  if (otpResult.rows.length === 0) {
+    throw ApiError.badRequest('No pending OTP found for this email');
+  }
+
+  const otpRecord = otpResult.rows[0];
+
+  if (new Date() > new Date(otpRecord.expires_at)) {
+    throw ApiError.badRequest('OTP has expired. Please request a new one.');
+  }
+
+  if (otpRecord.attempts >= otpRecord.max_attempts) {
+    throw ApiError.badRequest('Too many failed attempts. Please request a new OTP.');
+  }
+
+  if (otpRecord.otp !== otp.toString()) {
+    await db.query(
+      'UPDATE teacher_password_reset_otp SET attempts = attempts + 1 WHERE id = $1',
+      [otpRecord.id]
+    );
+    throw ApiError.badRequest('Invalid OTP');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const updatedUser = await User.updatePasswordByEmail(normalizedEmail, hashedPassword);
+
+  if (!updatedUser) {
+    throw ApiError.internal('Failed to reset password');
+  }
+
+  await db.query(
+    'UPDATE teacher_password_reset_otp SET verified = TRUE, updated_at = NOW() WHERE id = $1',
+    [otpRecord.id]
+  );
+
+  logger.info('Teacher password reset completed', { userId: updatedUser.id, email: normalizedEmail });
+
+  sendSuccess(res, HttpStatus.OK, 'Password reset successful. Please login with your new password.');
+});
+
+/**
+ * Resend OTP for teacher forgot password flow
+ * POST /api/auth/teacher/forgot-password/resend-otp
+ */
+const resendTeacherForgotPasswordOTP = catchAsync(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !email.trim()) {
+    throw ApiError.badRequest('Email is required');
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findByEmail(normalizedEmail);
+
+  // Always return generic success to avoid account enumeration.
+  if (!user || user.role !== 'TEACHER' || !user.is_active) {
+    return sendSuccess(
+      res,
+      HttpStatus.OK,
+      'If a teacher account exists for this email, a new OTP has been sent.',
+      { email: normalizedEmail, expiresIn: 600 }
+    );
+  }
+
+  const db = require('../config/database');
+  const { mailService } = require('../services');
+
+  const otpResult = await db.query(
+    `SELECT attempts, max_attempts FROM teacher_password_reset_otp
+     WHERE email = $1 AND verified = FALSE`,
+    [normalizedEmail]
+  );
+
+  if (otpResult.rows.length > 0) {
+    const otpRecord = otpResult.rows[0];
+    if (otpRecord.attempts >= otpRecord.max_attempts) {
+      throw ApiError.tooManyRequests('Too many failed attempts. Please try again later.');
+    }
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await db.query('DELETE FROM teacher_password_reset_otp WHERE email = $1', [normalizedEmail]);
+  await db.query(
+    `INSERT INTO teacher_password_reset_otp (email, otp, expires_at, attempts, max_attempts)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [normalizedEmail, otp, expiresAt, 0, 5]
+  );
+
+  const mailResult = await mailService.sendOTPEmail({
+    to: normalizedEmail,
+    otp,
+    expiresIn: 10,
+  });
+
+  if (!mailResult.delivered) {
+    logger.warn('Teacher forgot password OTP resend delivery failed', { email: normalizedEmail });
+  }
+
+  logger.info('Teacher forgot password OTP resent', {
+    email: normalizedEmail,
+    delivered: mailResult.delivered,
+  });
+
+  sendSuccess(
+    res,
+    HttpStatus.OK,
+    'If a teacher account exists for this email, a new OTP has been sent.',
+    { email: normalizedEmail, expiresIn: 600 }
+  );
+});
+
 module.exports = {
   register,
   login,
@@ -739,4 +946,7 @@ module.exports = {
   sendStudentForgotPasswordOTP,
   verifyStudentForgotPasswordOTPAndReset,
   resendStudentForgotPasswordOTP,
+  sendTeacherForgotPasswordOTP,
+  verifyTeacherForgotPasswordOTPAndReset,
+  resendTeacherForgotPasswordOTP,
 };

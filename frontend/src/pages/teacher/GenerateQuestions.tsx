@@ -39,6 +39,8 @@ interface GeneratedQuestionsData {
   questions: GeneratedQuestion[];
 }
 
+const ALLOWED_QUESTION_TYPES = ["MCQ", "Descriptive"];
+
 const GenerateQuestions: React.FC = () => {
   const { user } = useAuth();
   const [generateFormState, setGenerateFormState] = useState<GenerateFormState>(
@@ -70,6 +72,26 @@ const GenerateQuestions: React.FC = () => {
     duration: "60",
     totalMarks: "100",
   });
+
+  const [marksPerQuestion, setMarksPerQuestion] = useState({
+    MCQ: "" as any,
+    Descriptive: "" as any,
+  });
+
+  // Get marks per question based on selected type
+  const getMarksPerQuestion = () => {
+    const marks =
+      marksPerQuestion[
+        generateFormState.questionType as keyof typeof marksPerQuestion
+      ];
+    return marks ? parseInt(marks) : 0;
+  };
+
+  const calculateTotalMarks = () => {
+    const marksPerQ = getMarksPerQuestion();
+    const numQuestions = parseInt(generateFormState.numQuestions) || 0;
+    return marksPerQ && numQuestions ? marksPerQ * numQuestions : 0;
+  };
   const [isPublishing, setIsPublishing] = useState(false);
 
   // Fetch subjects when department and year change
@@ -125,7 +147,7 @@ const GenerateQuestions: React.FC = () => {
       generateFormState.department &&
       generateFormState.year &&
       generateFormState.subject &&
-      generateFormState.questionType &&
+      ALLOWED_QUESTION_TYPES.includes(generateFormState.questionType) &&
       generateFormState.difficulty &&
       generateFormState.numQuestions &&
       parseInt(generateFormState.numQuestions) > 0 &&
@@ -485,24 +507,24 @@ const GenerateQuestions: React.FC = () => {
 
                   <label className="text-sm font-medium text-slate-700">
                     Subject Name *
-                    <select
+                    <input
+                      type="text"
                       name="subject"
                       value={generateFormState.subject}
                       onChange={handleInputChange}
-                      disabled={loadingSubjects || !subjects.length}
-                      className="mt-2 w-full rounded-lg border border-blue-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
-                    >
-                      <option value="">
-                        {loadingSubjects
+                      list="subject-suggestions"
+                      placeholder={
+                        loadingSubjects
                           ? "Loading subjects..."
-                          : "Select subject"}
-                      </option>
+                          : "Enter subject name"
+                      }
+                      className="mt-2 w-full rounded-lg border border-blue-200 bg-white px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                    />
+                    <datalist id="subject-suggestions">
                       {subjects.map((subj) => (
-                        <option key={subj} value={subj}>
-                          {subj}
-                        </option>
+                        <option key={subj} value={subj} />
                       ))}
-                    </select>
+                    </datalist>
                   </label>
                 </div>
               </div>
@@ -541,10 +563,6 @@ const GenerateQuestions: React.FC = () => {
                       <option value="">Select question type</option>
                       <option value="MCQ">MCQ</option>
                       <option value="Descriptive">Descriptive</option>
-                      <option value="2 Marks">2 Marks</option>
-                      <option value="5 Marks">5 Marks</option>
-                      <option value="Long Answer">Long Answer</option>
-                      <option value="Viva Questions">Viva Questions</option>
                     </select>
                   </label>
 
@@ -577,6 +595,57 @@ const GenerateQuestions: React.FC = () => {
                     />
                   </label>
                 </div>
+
+                {/* Marks Information */}
+                {generateFormState.questionType &&
+                  generateFormState.numQuestions && (
+                    <div className="mt-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 block mb-2">
+                            Marks per MCQ
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={marksPerQuestion.MCQ}
+                            onChange={(e) =>
+                              setMarksPerQuestion((prev) => ({
+                                ...prev,
+                                MCQ: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-slate-700 block mb-2">
+                            Marks per Descriptive
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={marksPerQuestion.Descriptive}
+                            onChange={(e) =>
+                              setMarksPerQuestion((prev) => ({
+                                ...prev,
+                                Descriptive: e.target.value,
+                              }))
+                            }
+                            className="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-slate-700 mb-2">
+                            Total Marks
+                          </p>
+                          <p className="text-lg font-bold text-green-600 px-3 py-2">
+                            {calculateTotalMarks()} marks
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
               </div>
 
               {/* Prompt Textarea */}
