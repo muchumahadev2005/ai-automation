@@ -148,19 +148,9 @@ const Login: React.FC = () => {
               </button>
             </form>
 
-            {/* Create Account Link - Only for Teacher */}
+            {/* Teacher Actions */}
             {selectedRole === "TEACHER" && (
               <div className="mt-3 text-xs text-gray-500 text-center space-y-2">
-                <p>
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => navigate("/register")}
-                    className="text-blue-600 hover:underline font-medium"
-                  >
-                    Create Account
-                  </button>
-                </p>
                 <p>
                   Forgot password?{" "}
                   <button
