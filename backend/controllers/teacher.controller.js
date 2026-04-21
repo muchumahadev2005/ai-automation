@@ -5,6 +5,7 @@
 
 const axios = require('axios');
 const db = require('../config/database');
+const config = require('../config');
 const { sendSuccess, sendError, HttpStatus } = require('../utils/response');
 const catchAsync = require('../utils/catchAsync');
 const ApiError = require('../utils/ApiError');
@@ -36,7 +37,7 @@ const getSubjects = catchAsync(async (req, res) => {
 
 /**
  * Generate questions from prompt (without file)
- * POST /api/teacher/generate-questions-from-prompt
+ * POST /api/teacher/generate-questions
  */
 const generateQuestionsFromPrompt = catchAsync(async (req, res) => {
   const { department, year, subject, questionType, difficulty, numberOfQuestions, prompt, additionalInstructions } = req.body;
@@ -124,13 +125,13 @@ const generateQuestionsFromPrompt = catchAsync(async (req, res) => {
       subject,
       questionType,
       difficulty,
-      type: 'prompt-based',
+      type: 'teacher',
     };
 
     let body;
     try {
       const n8nResponse = await axios.post(
-        'http://localhost:5678/webhook/generate-questions-from-prompt',
+        config.n8n.promptQuestionWebhookUrl,
         n8nPayload,
         { timeout: 120000 }
       );

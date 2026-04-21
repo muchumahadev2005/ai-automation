@@ -296,31 +296,36 @@ const AdminDashboard: React.FC = () => {
     setSyllabusError(null);
 
     try {
-      // Extract text from the selected file
-      const syllabusText = await extractTextFromFile(selectedFile);
-
-      if (!syllabusText || syllabusText.trim().length === 0) {
-        setSyllabusError(
-          "Could not extract text from the uploaded file. Please ensure the file contains readable content.",
-        );
-        return;
-      }
-
-      // Send to n8n webhook with the extracted text
-      await n8nService.uploadSyllabusToN8N({
-        type: "admin",
+      // Persist syllabus in backend first so it always appears in the admin table.
+      await adminService.uploadSyllabus({
+        subject: formState.subject,
         branch: formState.branch,
         department: formState.department,
         year: formState.year,
-        subject: formState.subject,
-        syllabusText: syllabusText,
+        file: selectedFile,
       });
+
+      // Best effort: also index content in n8n for teacher prompt retrieval.
+      try {
+        const syllabusText = await extractTextFromFile(selectedFile);
+        if (syllabusText && syllabusText.trim().length > 0) {
+          await n8nService.uploadSyllabusToN8N({
+            type: "admin",
+            branch: formState.branch,
+            department: formState.department,
+            year: formState.year,
+            subject: formState.subject,
+            syllabusText,
+          });
+        }
+      } catch (indexingError) {
+        console.warn("Syllabus saved, but n8n indexing failed", indexingError);
+      }
 
       setFormState(initialFormState);
       setSelectedFile(null);
 
-      // Optionally refresh the syllabus library to show new entry
-      // (n8n processes it in the background)
+      // Refresh library from backend source of truth.
       await loadSyllabusData();
     } catch (error) {
       const message =

@@ -20,6 +20,7 @@ router.use(teacherOnly);
 
 // Question Generation
 router.get('/subjects', teacherController.getSubjects);
+router.post('/generate-questions', aiLimiter, handleValidation, teacherController.generateQuestionsFromPrompt);
 router.post('/generate-questions-from-prompt', aiLimiter, handleValidation, teacherController.generateQuestionsFromPrompt);
 
 // Results

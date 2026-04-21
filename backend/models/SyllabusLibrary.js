@@ -28,7 +28,18 @@ const SyllabusLibrary = {
     const result = await db.query(
       `INSERT INTO syllabus_library
         (subject, branch, department, year, file_path, original_file_name, mime_type, file_size_bytes, status, uploaded_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, 'UPLOADED'), $10)
+       VALUES (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7,
+        $8,
+        COALESCE($9::syllabus_upload_status, 'UPLOADED'::syllabus_upload_status),
+        $10
+       )
        RETURNING *`,
       [
         subject,

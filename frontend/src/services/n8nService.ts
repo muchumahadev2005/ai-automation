@@ -3,9 +3,6 @@
  * Handles communication with n8n webhooks for syllabus management and question answering
  */
 
-import type { AxiosError } from 'axios';
-import api from './api';
-
 interface SyllabusUploadPayload {
   type: 'admin';
   branch: string;
@@ -21,25 +18,43 @@ interface TeacherQuestionPayload {
   year: string;
   subject: string;
   chatInput: string;
+  prompt?: string;
 }
 
 interface TeacherQuestionResponse {
   answer: string;
 }
 
+const parseJsonResponse = async (response: Response): Promise<Record<string, unknown> | null> => {
+  const raw = await response.text();
+  if (!raw.trim()) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      return parsed as Record<string, unknown>;
+    }
+    return { value: parsed };
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Get n8n webhook URL from backend config
  */
 const getWebhookUrl = async (webhookType: 'syllabus' | 'question'): Promise<string> => {
   try {
-    // For now, construct from environment or backend config
+    // Both admin and teacher flows are routed through one webhook and branched by payload.type
     const baseUrl = import.meta.env.VITE_N8N_WEBHOOK_BASE || 'http://localhost:5678/webhook';
-    
-    if (webhookType === 'syllabus') {
-      return `${baseUrl}/syllabus-upload`;
-    } else {
-      return `${baseUrl}/teacher-question`;
+
+    if (webhookType === 'syllabus' || webhookType === 'question') {
+      return `${baseUrl}/upload-syllabus`;
     }
+
+    throw new Error('Unsupported webhook type');
   } catch {
     throw new Error('Unable to retrieve webhook configuration');
   }
@@ -63,17 +78,17 @@ export const uploadSyllabusToN8N = async (payload: SyllabusUploadPayload) => {
       body: JSON.stringify(payload),
     });
 
+    const data = await parseJsonResponse(response);
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `n8n webhook error: ${response.statusText}`
-      );
+      const errorMessage = typeof data?.message === 'string'
+        ? data.message
+        : `n8n webhook error: ${response.status} ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
-    const data = await response.json();
     return {
       success: true,
-      data,
+      data: data || {},
       message: 'Syllabus uploaded successfully',
     };
   } catch (error) {
@@ -96,27 +111,37 @@ export const askTeacherQuestion = async (
 ): Promise<TeacherQuestionResponse> => {
   try {
     const webhookUrl = await getWebhookUrl('question');
+    const normalizedPrompt = (payload.prompt || payload.chatInput || '').trim();
+
+    if (!normalizedPrompt) {
+      throw new Error('Question prompt is required');
+    }
+
+    const requestPayload = {
+      ...payload,
+      prompt: normalizedPrompt,
+    };
     
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(requestPayload),
     });
 
+    const data = await parseJsonResponse(response);
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.message || `n8n webhook error: ${response.statusText}`
-      );
+      const errorMessage = typeof data?.message === 'string'
+        ? data.message
+        : `n8n webhook error: ${response.status} ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
-    const data = await response.json();
     return {
-      answer:
-        data.answer ||
-        'No answer generated. Please try rephrasing your question.',
+      answer: typeof data?.answer === 'string'
+        ? data.answer
+        : 'No answer generated. Please try rephrasing your question.',
     };
   } catch (error) {
     const message =
